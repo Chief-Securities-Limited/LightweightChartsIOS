@@ -7,14 +7,14 @@ public protocol JavaScriptErrorDelegate: AnyObject {
 }
 
 // MARK: -
-class WebView: WKWebView {
+public class ChartWebView: WKWebView {
         
     weak var errorDelegate: JavaScriptErrorDelegate?
     
 }
 
 // MARK: - JavaScriptEvaluator
-extension WebView: JavaScriptEvaluator {
+extension ChartWebView: JavaScriptEvaluator {
     
     func evaluateScript(_ script: String, completion: ((Any?, Error?) -> Void)?) {
         evaluateJavaScript(script) { [weak self] (result, error) in
@@ -68,7 +68,7 @@ extension WebView: JavaScriptEvaluator {
 }
 
 // MARK: - JavaScriptMessageProducer
-extension WebView: JavaScriptMessageProducer {
+extension ChartWebView: JavaScriptMessageProducer {
     
     func addMessageHandler(_ messageHandler: WKScriptMessageHandler, name: String) {
         configuration.userContentController.add(messageHandler, name: name)

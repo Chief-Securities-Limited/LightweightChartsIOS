@@ -20,7 +20,7 @@ public class LightweightCharts: UIView {
         set { webView.errorDelegate = newValue }
     }
     
-    private let webView: WebView = WebView()
+    public let webView: ChartWebView = ChartWebView()
     private let promptHandler: PromptHandler = PromptHandler()
     private var chart: ChartApi!
     
