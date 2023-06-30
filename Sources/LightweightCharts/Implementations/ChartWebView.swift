@@ -10,7 +10,37 @@ public protocol JavaScriptErrorDelegate: AnyObject {
 public class ChartWebView: WKWebView {
         
     weak var errorDelegate: JavaScriptErrorDelegate?
-    
+    let panRecognizer = UIPanGestureRecognizer()
+
+    override init(frame: CGRect, configuration: WKWebViewConfiguration) {
+        super.init(frame: frame, configuration: configuration)
+        setupGestureRecognizer()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupGestureRecognizer()
+    }
+
+    private func setupGestureRecognizer() {
+        panRecognizer.delegate = self
+        addGestureRecognizer(panRecognizer)
+        scrollView.panGestureRecognizer.require(toFail: panRecognizer)
+    }
+
+}
+
+extension ChartWebView: UIGestureRecognizerDelegate {
+
+    public override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if let gestureRecognizer = gestureRecognizer as? UIPanGestureRecognizer {
+            let velocity = gestureRecognizer.velocity(in: self)
+            if velocity.y < 0 {
+                return true
+            }
+        }
+        return false
+    }
 }
 
 // MARK: - JavaScriptEvaluator
