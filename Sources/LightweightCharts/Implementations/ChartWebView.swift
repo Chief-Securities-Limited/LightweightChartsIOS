@@ -16,11 +16,14 @@ public class ChartWebView: WKWebView {
 extension ChartWebView: JavaScriptEvaluator {
     
     func evaluateScript(_ script: String, completion: ((Any?, Error?) -> Void)?) {
-        evaluateJavaScript(script) { [weak self] (result, error) in
-            if let error = error {
-                self?.errorDelegate?.didFailEvaluateScript(script, withError: error)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            evaluateJavaScript(script) { [weak self] (result, error) in
+                if let error = error {
+                    self?.errorDelegate?.didFailEvaluateScript(script, withError: error)
+                }
+                completion?(result, error)
             }
-            completion?(result, error)
         }
     }
     
