@@ -15,7 +15,7 @@
 
 	<style>
 		.customerDiv {
-			z-index: 9;
+			z-index: 99;
 			position: relative;
 		}
 		.vertical-line {
@@ -39,6 +39,16 @@
             height: 1px;
             left: 0;
             right: 0;
+        }
+		.x-axis-label, .y-axis-label {
+            position: absolute;
+            background-color: #808080;
+			border-radius: 2px;
+            padding: 2px 4px;
+            z-index: 11;
+            pointer-events: none;
+			font-size: 12px;
+			color: white;
         }
 	</style>
 
@@ -310,10 +320,12 @@
 				],
 
 				overrides: {
-					// 刻度样式设置
-					"mainSeriesProperties.showPriceLine": false,
-					"scalesProperties.showRightScale": false, // 隐藏右侧刻度
-					"scalesProperties.showHighAndLow": false, // 隐藏最高最低值
+					"highLowAvgPrice.highLowPriceLinesVisible": false,	// 隐藏最高最低水平線
+					"mainSeriesProperties.showPrevClosePriceLine": false, // 隐藏昨收价水平線
+					"ChartPriceScaleLabelsToggleSymbolNameLabelsVisibility": false,	 // 隐藏symbol名称
+					"ChartPriceScaleLabelsToggleHighLowPriceLabelsVisibility": false, // 隐藏最高最低值
+					"ChartPriceScaleLabelsToggleSymbolPrevCloseValueVisibility": false, // 隱藏昨收价
+					"ChartPriceScaleLabelsToggleAveragePriceLabelVisibility": false, // 隱藏最新值
 					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏主图的十字线
 					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
 					"scalesProperties.showPriceScaleCrosshairLabel": false,	// 隐藏Y轴十字线对应的label
@@ -520,20 +532,65 @@
 		}
 
 		function moveCrosshair(x, y) {
+			// 更新十字線
+			var mainChart = document.getElementById('tv_chart_container');
 			var vLine = document.getElementById('vertical-line');
 			var hLine = document.getElementById('horizontal-line');
 			vLine.style.left = x + 'px';
 			hLine.style.top = y + 'px';
 			vLine.style.display = 'block';
 			hLine.style.display = 'block';
+
+			// 更新x，y軸的Label
+			var timeScaleWidth = window.tvWidget.activeChart().getTimeScale().width();
+			var priceScaleWidth = mainChart.offsetWidth - timeScaleWidth;
+			var height = window.tvWidget.activeChart().getPanes()[0].getHeight();
+			var price = window.tvWidget.activeChart().getPanes()[0].getMainSourcePriceScale().coordinateToPrice(y);
+			var time = window.tvWidget.activeChart().getTimeScale().coordinateToTime(x - priceScaleWidth);
+
+			var xAxisLabel = document.getElementById('x-axis-label');
+			var yAxisLabel = document.getElementById('y-axis-label');
+
+			if (price !== null && time !== null) {
+				xAxisLabel.innerHTML = formatTimestamp(time);
+				yAxisLabel.innerHTML = price.toFixed(2);
+
+				xAxisLabel.style.left = (x - xAxisLabel.offsetWidth / 2) + 'px';
+				xAxisLabel.style.top = height + 'px';
+				xAxisLabel.style.display = 'block';
+
+				yAxisLabel.style.left = 0 + 'px';
+				yAxisLabel.style.top = (y - yAxisLabel.offsetHeight / 2) + 'px';
+				yAxisLabel.style.display = 'block';
+
+			} else {
+				document.getElementById('x-axis-label').style.display = 'none';
+				document.getElementById('y-axis-label').style.display = 'none';
+			}
+
 		}
 
 		function removeCrosshair() {
-			var vLine = document.getElementById('vertical-line');
-			var hLine = document.getElementById('horizontal-line');
-			vLine.style.display = 'none';
-			hLine.style.display = 'none';
+			document.getElementById('vertical-line').style.display = 'none';
+			document.getElementById('horizontal-line').style.display = 'none';
+			document.getElementById('x-axis-label').style.display = 'none';
+			document.getElementById('y-axis-label').style.display = 'none';
 		}
+
+		// 时间格式化
+		function formatTimestamp(timestamp) {
+			var date = new Date(timestamp * 1000);
+			var year = date.getFullYear();
+			var month = ('0' + (date.getMonth() + 1)).slice(-2);
+			var day = ('0' + date.getDate()).slice(-2);
+			var hours = ('0' + date.getHours()).slice(-2);
+			var minutes = ('0' + date.getMinutes()).slice(-2);
+			var seconds = ('0' + date.getSeconds()).slice(-2);
+
+			var formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+			return formattedDate;
+		}
+
 
 		window.addEventListener('DOMContentLoaded', initOnReady, false);
 	</script>
@@ -546,6 +603,8 @@
 	<div id="tv_chart_container2"></div>
 	<div id="vertical-line" class="vertical-line" style="display: none;"></div>
 	<div id="horizontal-line" class="horizontal-line" style="display: none;"></div>
+	<div id="x-axis-label" class="x-axis-label" style="display: none;"></div>
+	<div id="y-axis-label" class="y-axis-label" style="display: none;"></div>
 </body>
 
 </html>
