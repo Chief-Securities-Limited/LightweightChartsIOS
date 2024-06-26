@@ -15,7 +15,8 @@
 
 	<style>
 		.customerDiv {
-			z-index: 100;
+			z-index: 9;
+			position: relative;
 		}
 		.vertical-line {
             position: absolute;
@@ -272,7 +273,7 @@
 				debug: true, // uncomment this line to see Library errors and warnings in the console
 				// fullscreen: true,
 				// autosize: true,
-				width: 375,
+				width: 430,
 				height: 260,
 				symbol: 'AAPL',
 				interval: 'D',
@@ -311,16 +312,11 @@
 				overrides: {
 					// 刻度样式设置
 					"mainSeriesProperties.showPriceLine": false,
-					// "scalesProperties.textColor": "#9B9B9B", // 刻度（轴）文本颜色
-					// "scalesProperties.fontSize": "8", // 刻度（轴）字体大小。
-					// "scalesProperties.axisHighlightColor": "blue", // 刻度（轴）高亮颜色
-					// "scalesProperties.crosshairLabelBgColorDark": "#808080"
-					// "ChartPriceScaleLabelsToggleSymbolNameLabelsVisibility": false,
-					// "ChartPriceScaleLabelsToggleSymbolPrevCloseValueVisibility": false,
-					// "ChartLinesToggleHighLowLinesVisibility": false,
-					// "ChartPriceScaleLabelsToggleIndicatorsNameLabelsVisibility": false,
-					// "ChartPriceScaleLabelsToggleIndicatorsValueLabelsVisibility": false
-
+					"scalesProperties.showRightScale": false, // 隐藏右侧刻度
+					"scalesProperties.showHighAndLow": false, // 隐藏最高最低值
+					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏主图的十字线
+					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
+					"scalesProperties.showPriceScaleCrosshairLabel": false,	// 隐藏Y轴十字线对应的label
 				}
 			});
 
@@ -328,7 +324,7 @@
 				debug: true, // uncomment this line to see Library errors and warnings in the console
 				// fullscreen: true,
 				// autosize: true,
-				width: 375,
+				width: 430,
 				height: 400,
 				symbol: 'AAPL',
 				interval: 'D',
@@ -382,6 +378,9 @@
 					"scalesProperties.showSeriesLastValue": false,  // 隐藏最新值标记
 					"scalesProperties.showRightScale": false, // 隐藏右侧刻度
 					"scalesProperties.showHighAndLow": false, // 隐藏最高最低值
+					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏studies图表的十字线
+					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
+					"scalesProperties.showPriceScaleCrosshairLabel": false	// 隐藏Y轴十字线对应的label
 				}
 			});
 
@@ -496,19 +495,6 @@
 			console.log("vol: ========== )", volScales, volScales.coordinateToPrice(0));
 			// var volRange = volScales.getVisiblePriceRange();
 			// console.log("vol: ========== )", volRange.from, volRange.to, "height: ===", volHeight, "y: ===", y);
-
-
-
-
-
-			// 创建并触发 mousemove 事件
-			// var event = new MouseEvent('mousemove', {
-			// 	clientX: x,
-			// 	clientY: 0,
-			// 	bubbles: true
-			// });
-			// console.log("handlePanGesture===============", x, y)
-			// document.getElementById('tv_chart_container2').dispatchEvent(event);
 		}
 
 		function getBarsDataCallBack(jsonData) {
