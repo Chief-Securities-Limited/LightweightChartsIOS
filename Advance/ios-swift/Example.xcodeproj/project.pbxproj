@@ -12,6 +12,10 @@
 		84DC10BB216681E40073B9A8 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 84DC10B9216681E40073B9A8 /* Main.storyboard */; };
 		84DC10BD216681E60073B9A8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 84DC10BC216681E60073B9A8 /* Assets.xcassets */; };
 		84DC10C0216681E60073B9A8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 84DC10BE216681E60073B9A8 /* LaunchScreen.storyboard */; };
+		8C302F9D2C2E957600508D4F /* custom_y_axis.js in Resources */ = {isa = PBXBuildFile; fileRef = 8C302F9C2C2E957600508D4F /* custom_y_axis.js */; };
+		8C302FA72C2E96C200508D4F /* datafeed.js in Resources */ = {isa = PBXBuildFile; fileRef = 8C302FA62C2E96C200508D4F /* datafeed.js */; };
+		8C302FA92C2E97A600508D4F /* custom_crosshair.css in Resources */ = {isa = PBXBuildFile; fileRef = 8C302FA82C2E97A600508D4F /* custom_crosshair.css */; };
+		8C302FAB2C2E999E00508D4F /* custom_crosshair.js in Resources */ = {isa = PBXBuildFile; fileRef = 8C302FAA2C2E999E00508D4F /* custom_crosshair.js */; };
 		8CB00A472BE9CE9F00BF4437 /* PanModal in Frameworks */ = {isa = PBXBuildFile; productRef = 8CB00A462BE9CE9F00BF4437 /* PanModal */; };
 		8CB00A492BE9CEED00BF4437 /* DrawToolBottomSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CB00A482BE9CEED00BF4437 /* DrawToolBottomSheetViewController.swift */; };
 		D4F905EB2BCFCCED003CD998 /* featuresets.html in Resources */ = {isa = PBXBuildFile; fileRef = D4F905DC2BCFCCED003CD998 /* featuresets.html */; };
@@ -38,6 +42,10 @@
 		84DC10BC216681E60073B9A8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		84DC10BF216681E60073B9A8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		84DC10C1216681E60073B9A8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8C302F9C2C2E957600508D4F /* custom_y_axis.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = custom_y_axis.js; sourceTree = "<group>"; };
+		8C302FA62C2E96C200508D4F /* datafeed.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = datafeed.js; sourceTree = "<group>"; };
+		8C302FA82C2E97A600508D4F /* custom_crosshair.css */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.css; path = custom_crosshair.css; sourceTree = "<group>"; };
+		8C302FAA2C2E999E00508D4F /* custom_crosshair.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = custom_crosshair.js; sourceTree = "<group>"; };
 		8CB00A482BE9CEED00BF4437 /* DrawToolBottomSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrawToolBottomSheetViewController.swift; sourceTree = "<group>"; };
 		D4F905DC2BCFCCED003CD998 /* featuresets.html */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; path = featuresets.html; sourceTree = "<group>"; };
 		D4F905DD2BCFCCED003CD998 /* CONTRIBUTING.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = CONTRIBUTING.md; sourceTree = "<group>"; };
@@ -109,6 +117,7 @@
 				D4F905DE2BCFCCED003CD998 /* datafeeds */,
 				D4F905E42BCFCCED003CD998 /* featuresets.css */,
 				D4F905DC2BCFCCED003CD998 /* featuresets.html */,
+				8C302FA12C2E961700508D4F /* chief */,
 				D4F905E82BCFCCED003CD998 /* index.html */,
 				D4F905E72BCFCCED003CD998 /* mobile_black.html */,
 				D4F905E92BCFCCED003CD998 /* mobile_white.html */,
@@ -121,6 +130,17 @@
 			path = ChartingLibrary;
 			sourceTree = "<group>";
 		};
+		8C302FA12C2E961700508D4F /* chief */ = {
+			isa = PBXGroup;
+			children = (
+				8C302FA82C2E97A600508D4F /* custom_crosshair.css */,
+				8C302FAA2C2E999E00508D4F /* custom_crosshair.js */,
+				8C302FA62C2E96C200508D4F /* datafeed.js */,
+				8C302F9C2C2E957600508D4F /* custom_y_axis.js */,
+			);
+			name = chief;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -131,6 +151,7 @@
 				84DC10AE216681E40073B9A8 /* Sources */,
 				84DC10AF216681E40073B9A8 /* Frameworks */,
 				84DC10B0216681E40073B9A8 /* Resources */,
+				8C347F122C2BF10400FAA79F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -185,9 +206,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8C302F9D2C2E957600508D4F /* custom_y_axis.js in Resources */,
 				D4F905F62BCFCCED003CD998 /* index.html in Resources */,
+				8C302FAB2C2E999E00508D4F /* custom_crosshair.js in Resources */,
 				D4F905F32BCFCCED003CD998 /* themed.css in Resources */,
 				D4F905EE2BCFCCED003CD998 /* test.html in Resources */,
+				8C302FA72C2E96C200508D4F /* datafeed.js in Resources */,
 				84DC10C0216681E60073B9A8 /* LaunchScreen.storyboard in Resources */,
 				D4F905F22BCFCCED003CD998 /* featuresets.css in Resources */,
 				D4F905F52BCFCCED003CD998 /* mobile_black.html in Resources */,
@@ -201,11 +225,33 @@
 				D4F905F72BCFCCED003CD998 /* mobile_white.html in Resources */,
 				D4F905EF2BCFCCED003CD998 /* themed.html in Resources */,
 				D4F905ED2BCFCCED003CD998 /* datafeeds in Resources */,
+				8C302FA92C2E97A600508D4F /* custom_crosshair.css in Resources */,
 				84DC10BB216681E40073B9A8 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8C347F122C2BF10400FAA79F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "
+";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		84DC10AE216681E40073B9A8 /* Sources */ = {

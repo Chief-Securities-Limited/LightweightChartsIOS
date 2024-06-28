@@ -20,31 +20,34 @@ struct BarItem: Codable {
 }
 
 class ViewController: UIViewController, WKScriptMessageHandler {
+    
+    private var drawCrosshair = false
    
     private lazy var mainWebView: WKWebView = {
         let configuration = WKWebViewConfiguration()
+        configuration.userContentController.add(self, name: "consoleHandler")
         configuration.userContentController.add(self, name: "getBars")
         configuration.userContentController.add(self, name: "crossHairMoved")
         configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        configuration.allowsInlineMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
             
+        let script = """
+                (function() {
+                    var originalLog = console.log;
+                    console.log = function(message) {
+                        window.webkit.messageHandlers.consoleHandler.postMessage(message);
+                        originalLog.apply(console, arguments);
+                    };
+                })();
+                """
+        
+        let userScript = WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
+        configuration.userContentController.addUserScript(userScript)
+        
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.isScrollEnabled = false
-        webView.navigationDelegate = self
-        if #available(iOS 16.4, *) {
-            webView.isInspectable = true
-        }
-        webView.translatesAutoresizingMaskIntoConstraints = false
-        return webView
-    }()
-    
-    private lazy var volChartView: WKWebView = {
-        let configuration = WKWebViewConfiguration()
-        configuration.userContentController.add(self, name: "getBars")
-        configuration.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
-            
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.navigationDelegate = self
         if #available(iOS 16.4, *) {
             webView.isInspectable = true
@@ -66,123 +69,27 @@ class ViewController: UIViewController, WKScriptMessageHandler {
    
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupGestureRecognizer()
         view.addSubview(mainWebView)
-//        view.addSubview(volChartView)
-//        view.addSubview(drawButton)
+        view.addSubview(drawButton)
         
         NSLayoutConstraint.activate([
             mainWebView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             mainWebView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
             mainWebView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
-//            mainWebView.heightAnchor.constraint(equalToConstant: 206),
-            // 大视图
             mainWebView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-            // 小时图
-            // webView.widthAnchor.constraint(equalToConstant: 231),
-//            
-//            volChartView.topAnchor.constraint(equalTo: mainWebView.bottomAnchor, constant: 80),
-//            volChartView.leadingAnchor.constraint(equalTo: mainWebView.leadingAnchor),
-//            volChartView.trailingAnchor.constraint(equalTo: mainWebView.trailingAnchor),
-//            volChartView.heightAnchor.constraint(equalToConstant: 62),
-            
-//            drawButton.leadingAnchor.constraint(equalTo: mainWebView.leadingAnchor),
-//            drawButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.25),
-//            drawButton.topAnchor.constraint(equalTo: volChartView.bottomAnchor, constant: 40),
-//            drawButton.heightAnchor.constraint(equalToConstant: 44)
+
+            drawButton.leadingAnchor.constraint(equalTo: mainWebView.leadingAnchor),
+            drawButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.25),
+            drawButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 20),
+            drawButton.heightAnchor.constraint(equalToConstant: 44)
         ])
         
         guard let url = Bundle.main.url(forResource: "index", withExtension: "html") else {
             print("No file at url")
             return
         }
-        mainWebView.loadFileURL(url, allowingReadAccessTo: url)
-//        volChartView.loadFileURL(url, allowingReadAccessTo: url)
+        mainWebView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
     }
-    
-    private func setupGestureRecognizer() {
-        let panGes = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
-        panGes.delegate = self
-        view.addGestureRecognizer(panGes)
-        
-        let longPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPressGesture(_:)))
-        longPressGestureRecognizer.minimumPressDuration = 0.4
-        view.addGestureRecognizer(longPressGestureRecognizer)
-
-    }
-    
-    @objc private func handleLongPressGesture(_ recognizer: UILongPressGestureRecognizer) {
-//        if recognizer.state == .began || recognizer.state == .changed {
-//
-//            let location = recognizer.location(in: view)
-//            if mainWebView.frame.contains(location) {
-//                let location = view.convert(location, to: mainWebView)
-//                print("ges: ========== location \(location)")
-//                chartHistogram.setGridLinePoint(point: tapLocationInSubview1)
-//                CXLightweightChartProxy.shared.currentDelegate = chartHistogram
-//                let tapLocationInSubview2 = convert(location, to: chartline)
-//                chartline.setGridLinePoint(point: tapLocationInSubview2, hiddenXTips: true)
-                
-//            } 
-//            
-//        } else {
-//            longPressGestureTargeted = false
-//            chartHistogram.hiddenGridLines()
-//            chartline.hiddenGridLines()
-//            chartHistogram.clearFlow()
-//            chartline.clearFlow()
-//            CXLightweightChartProxy.shared.currentDelegate = nil
-//            OrderEntryRedisDataFetcher.shared.cancel = false
-//        }
-    }
-    
-    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let location = gesture.location(in: mainWebView)
-        let script = "handlePanGesture(\(location.x), \(location.y));"
-        print("ges: ===== \(script)")
-        mainWebView.evaluateJavaScript(script, completionHandler: nil)
-        
-//        let translation = gesture.translation(in: self.view)
-//        let location = gesture.location(in: self.view)
-//
-//        // scroll direction
-//        var isScrollUpDownDirection: Bool = true
-//        if abs(translation.x) > abs(translation.y) {
-//            isScrollUpDownDirection = false
-//        }
-//        
-//        print("ges: ========== translation \(translation)")
-//        
-//        // chartView ges target
-//        if gesture.state == .began  {
-////            if chartHistogram.frame.contains(location) {
-////                CXLightweightChartProxy.shared.currentDelegate = chartHistogram
-////            } else if chartline.frame.contains(location) {
-////                CXLightweightChartProxy.shared.currentDelegate = chartline
-////            } else {
-////                CXLightweightChartProxy.shared.currentDelegate = nil
-////            }
-//            
-//        }  else  {
-////            chartHistogram.hiddenGridLines()
-////            chartline.hiddenGridLines()
-////            chartHistogram.clearFlow()
-////            chartline.clearFlow()
-//        }
-//        
-//        // update tableView scroll contentOffset
-////        guard CXLightweightChartProxy.shared.currentDelegate == nil || isScrollUpDownDirection else {
-////            return
-////        }
-////        if let scrollView = parentScrollView {
-////            let contentOffsetY = scrollView.contentOffset.y - translation.y
-////            parentScrollView?.setContentOffset(CGPoint(x: 0, y: max(0, contentOffsetY)), animated: false)
-////        }
-//        if gesture.state == .changed || gesture.state == .ended || gesture.state == .cancelled {
-//            gesture.setTranslation(.zero, in: self.view)
-//        }
-    }
-    
    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -190,12 +97,6 @@ class ViewController: UIViewController, WKScriptMessageHandler {
 
 }
 
-
-extension ViewController: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
-    }
-}
 
 // MARK: - Data
 extension ViewController {
@@ -220,6 +121,11 @@ extension ViewController {
             
         } else if name == "crossHairMoved" {
             print("crossHairMoved === \(message.body)")
+            
+        } else if message.name == "consoleHandler" {
+            if let logMessage = message.body as? String {
+                print("JavaScript log: \(logMessage)")
+            }
         }
     }
     
@@ -234,12 +140,6 @@ extension ViewController {
         let jsonString = formatJSONString(barsData)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.mainWebView.evaluateJavaScript("getBarsDataCallBack('\(jsonString)')", completionHandler: { result, error in
-                if let error = error {
-                    print("Failed to send marks data: \(error)")
-                }
-            })
-            
-            self.volChartView.evaluateJavaScript("getBarsDataCallBack('\(jsonString)')", completionHandler: { result, error in
                 if let error = error {
                     print("Failed to send marks data: \(error)")
                 }

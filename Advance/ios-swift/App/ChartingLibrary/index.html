@@ -7,263 +7,15 @@
 
 	<!-- Fix for iOS Safari zooming bug -->
 	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
-
+	<script type="text/javascript" src="custom_y_axis.js"></script>
+	<script type="text/javascript" src="datafeed.js"></script>
 	<script type="text/javascript" src="charting_library/charting_library.standalone.js"></script>
 	<script type="text/javascript" src="datafeeds/udf/dist/bundle.js"></script>
-	<script	type="text/javascript" src="chief/datafeed.js"></script>
-
-
-	<style>
-		.customerDiv {
-			z-index: 99;
-			position: relative;
-		}
-		.vertical-line {
-            position: absolute;
-            background-color: red;
-            z-index: 10;
-            pointer-events: none;
-        }
-		.horizontal-line {
-            position: absolute;
-            background-color: red;
-            z-index: 8;
-            pointer-events: none;
-        }
-        .vertical-line {
-            width: 1px;
-            top: 0;
-            bottom: 0;
-        }
-        .horizontal-line {
-            height: 1px;
-            left: 0;
-            right: 0;
-        }
-		.x-axis-label, .y-axis-label {
-            position: absolute;
-            background-color: #808080;
-			border-radius: 2px;
-            padding: 2px 4px;
-            z-index: 11;
-            pointer-events: none;
-			font-size: 12px;
-			color: white;
-        }
-	</style>
+	<script type="text/javascript" src="custom_crosshair.js"></script>
+	<link rel="stylesheet" href="custom_crosshair.css">
 
 	<script type="text/javascript">
-		// 定义一个JS对象，实现图表数据的加载
-		const chartDataFetcher = {
-			// 初始化(必须有)
-			onReady: function (callback) {
-				console.log('onReady called');
-				setTimeout(
-					() => {
-						callback({
-							supports_search: true,
-							supports_group_request: false,
-							supports_marks: true,
-							supports_timescale_marks: true,
-							supports_time: true,
-							exchanges: [
-								{ value: "", name: "All Exchanges", desc: "" },
-								{ value: "NasdaqNM", name: "NasdaqNM", desc: "NasdaqNM" },
-								{ value: "NYSE", name: "NYSE", desc: "NYSE" }
-							],
-							symbols_types: [
-								{ name: "All types", value: "" },
-								{ name: "Stock", value: "stock" },
-								{ name: "Index", value: "index" }
-							],
-							supported_resolutions: ["1", "5", "60", "1W", "1M", "12M"]
-						});
-					},
-					0
-				);
-			},
-
-			// 获取标记信息（可以没有）
-			getMarks: function (symbolInfo, startDate, endDate, onDataCallback, resolution) {
-				console.log('getMarks called');
-				onDataCallback(
-					[
-						// {
-						// 	id: 1,
-						// 	time: endDate,
-						// 	color: 'red',
-						// 	text: ['This is the mark pop-up text.'],
-						// 	label: 'M',
-						// 	labelFontColor: 'blue',
-						// 	minSize: 25
-						// },
-					]);
-			},
-
-			// 获取symbol的交易信息，比如交易所、时区、交易时间等 (必须有)
-			resolveSymbol: function (symbolName, onSymbolResolvedCallback, onResolveErrorCallback, extension) {
-				console.log('resolveSymbol called');
-				setTimeout(
-					() => {
-						// Return some simple symbol information for the TEST symbol
-						if (symbolName === 'AAPL') {
-							onSymbolResolvedCallback({
-								"name": "AAPL",
-								"timezone": "America/New_York",
-								"minmov": 1,
-								"minmov2": 0,
-								"pointvalue": 1,
-								"session": "24x7",
-								"has_intraday": false,
-								"visible_plots_set": "c",
-								"description": "AAPL Symbol",
-								"type": "stock",
-								"pricescale": 100,
-								"ticker": "AAPL",
-								"exchange": "Test Exchange",
-								"has_daily": true,
-								"format": "price"
-							});
-						} else {
-							// Ignore all other symbols
-							onResolveErrorCallback('unknown_symbol');
-						}
-					},
-					0
-				);
-			},
-
-			// 获取条形图数据
-			getBars: function (symbolInfo, resolution, periodParams, onHistoryCallback, onError) {
-				console.log(`getBars called ${symbolInfo.name} 
-				${resolution}
-				${periodParams.from} 
-				${periodParams.to}
-				${periodParams.firstDataRequest}`);
-
-				// // 注册回调，以便原生代码可以将结果返回
-				// window.getBarsErrorCallBack = onError;
-				window.getBarsCallback = onHistoryCallback;
-
-				// 调用原生的方法
-				window.webkit.messageHandlers.getBars.postMessage({
-					resolution: String(resolution),
-					symbol: String(symbolInfo.ticker),
-					from: periodParams.from,
-					to: periodParams.to,
-					firstDataRequest: periodParams.firstDataRequest,
-					countBack: periodParams.countBack
-				});
-			},
-
-			// 新增的方法
-			getServerTime: function (callback) {
-				console.log('getServerTime called');
-				const serverTime = Date.now(); // 模拟服务器时间
-				callback(serverTime);
-			},
-
-			// 获取时间刻度上的标记（可以没有）
-			getTimescaleMarks: function (symbolInfo, startDate, endDate, onDataCallback, resolution) {
-				console.log('getTimescaleMarks called');
-				let marks = [];
-
-				// if (symbolInfo.name === 'AAPL') {
-				// 	marks = [
-				// 		{
-				// 			id: 1,
-				// 			time: startDate,
-				// 			color: 'red',
-				// 			label: 'Aa',
-				// 			minSize: 30,
-				// 			tooltip: [
-				// 				'Lorem',
-				// 				'Ipsum',
-				// 				'Dolor',
-				// 				'Sit',
-				// 			]
-				// 		},
-				// 		{
-				// 			id: 2,
-				// 			time: startDate + 5260000, // 2 months
-				// 			color: 'blue',
-				// 			label: 'B',
-				// 			minSize: 30,
-				// 			tooltip: [
-				// 				'Amet',
-				// 				'Consectetur',
-				// 				'Adipiscing',
-				// 				'Elit',
-				// 			]
-				// 		}
-				// 	];
-				// } else {
-				// 	marks = [
-				// 		{
-				// 			id: 'String id',
-				// 			time: endDate,
-				// 			color: 'red',
-				// 			label: 'T',
-				// 			tooltip: ['Nulla']
-				// 		}
-				// 	];
-				// }
-
-				onDataCallback(marks);
-			},
-
-			getVolumeProfileResolutionForPeriod: function (currentResolution, from, to, symbolInfo) {
-				console.log('getVolumeProfileResolutionForPeriod called');
-				return "D"; // 简单返回当前分辨率
-			},
-
-			// 搜索symbol（也可以没有）
-			searchSymbols: function (userInput, exchange, symbolType, onResult) {
-				console.log('searchSymbols called');
-				const results = [
-					{ symbol: userInput, full_name: `${exchange}:${userInput}`, description: `${userInput} Stock`, exchange: exchange, type: symbolType }
-				];
-				onResult(results);
-			},
-
-			// subscribeBars: function (symbolInfo, resolution, onTick, listenerGuid, onResetCacheNeededCallback) {
-			// 	console.log(`subscribeBars called ${symbolInfo.name} ${resolution} ${listenerGuid}`);
-			// 	// 模拟订阅行为，这里不执行真正的数据订阅
-			// 	onTick(
-			// 		[{
-			// 			'time': 1714699864099.6055,
-			// 			'open': 152,
-			// 			'high': 152,
-			// 			'low': 148,
-			// 			'close': 150
-			// 		},
-			// 			{
-			// 				'time': 1714702804099.6055,
-			// 				'open': 153,
-			// 				'high': 153,
-			// 				'low': 147,
-			// 				'close': 151
-			// 			}]
-			// 	)
-			// },
-
-			subscribeDepth: function (symbol, callback) {
-				console.log('subscribeDepth called');
-				return 'depthSubscriptionId'; // 返回订阅ID
-			},
-
-			unsubscribeBars: function (listenerGuid) {
-				console.log('unsubscribeBars called');
-				// 模拟取消订阅行为
-			},
-
-			unsubscribeDepth: function (subscriberUID) {
-				console.log('unsubscribeDepth called');
-				// 模拟取消深度订阅
-			}
-		};
-
-
+	
 		function getParameterByName(name) {
 			name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
 			var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -271,17 +23,81 @@
 			return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 		}
 
-
 		window.onload = function () {
+			let longPressTimer;
+			var startTrackingMode = false;
+
 			var tradingDocumentElement = document.getElementById('tv_chart_container').querySelector('iframe').contentDocument.documentElement
+			
 			tradingDocumentElement.addEventListener('touchmove', function (event) {
 				const touch = event.touches[0];
 				var x = touch.clientX;
 				var y = touch.clientY;
-				moveCrosshair(x, y);
-				console.log('Touch move event:===== ', x, y);
+
+				console.log('Touch==== visible:===== start ');
+				var visible = window.tvWidget.activeChart().chartModel().crossHairSource().visible;
+				console.log('Touch==== visible:===== value ', visible);
+				if (startTrackingMode) {
+					crossHairMoved(x, y);
+				} else {
+					cancelLongPressTimer();
+					startTrackingMode = false;
+					removeCrosshair(); 
+				}
+
+				console.log('Touch==== move event:===== ', x, y);
 			});
+
+			tradingDocumentElement.addEventListener('touchstart', function (event) {
+				console.log('Touch==== start event:===== ');
+				if (startTrackingMode) {
+					startTrackingMode = false;
+					removeCrosshair();
+				}
+				startLongPressTimer(event);
+			}, { passive: true });
+			
+			tradingDocumentElement.addEventListener('touchend', function (event) {
+				console.log('Touch==== end event:===== ');
+				cancelLongPressTimer();
+				if (startTrackingMode) {
+					removeCrosshair();
+				}
+				window.tvWidget.activeChart()._chartWidget.exitTrackingMode();
+			});
+
+			function startLongPressTimer(e) {
+				cancelLongPressTimer();
+				// e.preventDefault(); // Prevent default touch actions
+				longPressTimer = setTimeout(() => handleLongPress(e), 100); // 240ms for long press detection
+			}
+			
+			function cancelLongPressTimer() {
+				clearTimeout(longPressTimer);
+			}
+
+			function handleLongPress(e) {
+				startTrackingMode = true;
+				console.log('Touch==== Long press event:=====');
+				// start tracking
+				window.tvWidget.activeChart()._chartWidget.startTrackingMode();
+				// e.preventDefault(); // Prevent default touch actions
+				cancelLongPressTimer(longPressTimer);
+				var x, y;
+				if (e.type === 'touchstart' || e.type === 'touchmove') {
+					const touch = e.touches[0];
+					x = touch.clientX;
+					y = touch.clientY;
+					console.log(`Touch coordinates: (${touch.clientX}, ${touch.clientY})`);
+				} else {
+					x = e.clientX;
+					y = e.clientY;
+					console.log(`Mouse coordinates: (${e.clientX}, ${e.clientY})`);
+				}
+				crossHairMoved(x, y);
+			}
 		};
+
 
 		function initOnReady() {
 			console.log("initOnReady========");
@@ -388,11 +204,6 @@
 				overrides: {
 					// 图表属性：https://www.tradingview.com/charting-library-docs/latest/api/interfaces/Charting_Library.ChartPropertiesOverrides#mainseriespropertiesbaselinestylebottomlinewidth
 					// 刻度样式设置
-					// "mainSeriesProperties.showPriceLine": true,
-					// "scalesProperties.textColor": "#9B9B9B", // 刻度（轴）文本颜色
-					// "scalesProperties.fontSize": "8", // 刻度（轴）字体大小。
-					// "scalesProperties.axisHighlightColor": "blue", // 刻度（轴）高亮颜色
-					// "scalesProperties.crosshairLabelBgColorDark": "#808080"
 					"mainSeriesProperties.style": 0,  // 设置主系列样式为 0（无显示）
 					"mainSeriesProperties.visible": false, // 隐藏主系列
 					"paneProperties.legendProperties.showStudyTitles": true,
@@ -412,12 +223,10 @@
 			seriesWidget.onChartReady(() => {
 				// 监听十字线
 				seriesWidget.activeChart().crossHairMoved().subscribe(null, function ({ offsetX, offsetY, time, price }) {
-					console.log("cross hair moved: ", time, price + "==== x: " + offsetX + " y: " + offsetY)
-
+					// console.log("cross hair moved: ", time, price + "==== x: " + offsetX + " y: " + offsetY);
 					// var priceRange = seriesWidget.activeChart().getVisiblePriceRange();
 					// console.log("price-range: ======== )", priceRange);
 				});
-
 				
 				seriesWidget.activeChart().onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
 					console.log("visible range changed: ", from, to)
@@ -427,35 +236,50 @@
 						return;
 					}
 					studiesWidget.activeChart().setVisibleRange({ from: from, to: to });
+				});
 
+				seriesWidget.activeChart().onHoveredSourceChanged().subscribe(null, function ({ arguments }) {
+					console.log("onHoveredSourceChanged: ========  ", onHoveredSourceChanged);
 				});
 
 				// 重写图表属性
 				seriesWidget.applyOverrides({ 
 					"priceScaleSelectionStrategyName": "left"		// 设置y轴，左边放置
 				});
+				
+				refreshAllPanesCustomYAxis(seriesWidget);
 			});
 
 			// 指标线图
 			studiesWidget.onChartReady(() => {
 				// 隐藏Series图
+				// var seriesEntityId = studiesWidget.activeChart().getSeries().entityId();
+				// studiesWidget.activeChart().removeEntity(seriesEntityId);
 				studiesWidget.activeChart().getSeries().setVisible(false);
+				// studiesWidget.activeChart().getSeries().sendToBack();
 				// studiesWidget.activeChart().getPanes()[0].collapse();
 
 				// 创建指标图
 				studiesWidget.activeChart().createStudy('Volume', false, false).then(entityId => {
+					console.log("Volume: ======== )", entityId);
+					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
+					indicator.startFullscreen();
 					indicator.applyOverrides({
 						'showLabelsOnPriceScale': false,
 					});
 				});
 				studiesWidget.activeChart().createStudy('MACD', false, false).then(entityId => {
+					console.log("MACD: ======== )", entityId);
+					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
 					indicator.applyOverrides({
 						'showLabelsOnPriceScale': false,
 					});
 				});
 				studiesWidget.activeChart().createStudy('Relative Strength Index', false, false).then(entityId => {
+					console.log("RSI: ======== )", entityId);
+					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
 					indicator.applyOverrides({
 						'showLabelsOnPriceScale': false,
@@ -464,7 +288,7 @@
 
 				// 监听十字线
 				studiesWidget.activeChart().crossHairMoved().subscribe(null, function ({ time, price }) {
-					console.log("widget 1 cross hair moved: ", time, price);
+					// console.log("widget 1 cross hair moved: ", time, price);
 				});
 
 				// 时间轴监听(实现不同widget的时间轴同步)
@@ -482,44 +306,11 @@
 				studiesWidget.applyOverrides({
 					"priceScaleSelectionStrategyName": "left"		// 设置y轴，左边放置
 				});
+
+				refreshAllPanesCustomYAxis(studiesWidget);
 			});
 
 		};
-
-		// 将坐标模拟成鼠标事件
-		function handlePanGesture(x, y) {
-			// 获取当前价格范围
-			if (y < 0) {
-				y = 0;
-			}
-
-			moveCrosshair(x, y);
-
-			// 获取x对应的时间(PS：Y轴也占用了位置)
-			// e.g. 1498138200 => 2017-06-22 09:30:00
-			var time = window.tvWidget2.activeChart().getTimeScale().coordinateToTime(0);
-
-			// 主视图 y轴
-			var widget = window.tvWidget
-			var chart = widget.activeChart();
-			var seriesPane = chart.getPanes()[0];
-			var currentPrice = seriesPane.getMainSourcePriceScale().coordinateToPrice(y);
-			var seriesHeight = seriesPane.getHeight();
-			var priceRange = chart.getVisiblePriceRange();
-			var range = priceRange.to - priceRange.from;
-			var price = priceRange.from + (1 - (y / seriesHeight)) * range;
-			console.log("price: ======== )", price, "currentPrice:=== ", currentPrice, "y: ===", y, "spacing: ===", range, "range:== ", priceRange.from, priceRange.to);
-
-			// VOL
-			var studiesWidget = window.tvWidget2;
-			var studiesChart = studiesWidget.activeChart();
-			var volPane = studiesChart.getPanes()[1];
-			var volHeight = volPane.getHeight();
-			var volScales = volPane.getMainSourcePriceScale();
-			console.log("vol: ========== )", volScales, volScales.coordinateToPrice(0));
-			// var volRange = volScales.getVisiblePriceRange();
-			// console.log("vol: ========== )", volRange.from, volRange.to, "height: ===", volHeight, "y: ===", y);
-		}
 
 		function getBarsDataCallBack(jsonData) {
 			// Native can't directly pass JSONString to getBarsCallback, need to parse it first
@@ -543,67 +334,6 @@
 			window.tvWidget.activeChart().setSymbol('IBM');
 		}
 
-		function moveCrosshair(x, y) {
-			// 更新十字線
-			var mainChart = document.getElementById('tv_chart_container');
-			var vLine = document.getElementById('vertical-line');
-			var hLine = document.getElementById('horizontal-line');
-			vLine.style.left = x + 'px';
-			hLine.style.top = y + 'px';
-			vLine.style.display = 'block';
-			hLine.style.display = 'block';
-
-			// 更新x，y軸的Label
-			var timeScaleWidth = window.tvWidget.activeChart().getTimeScale().width();
-			var priceScaleWidth = mainChart.offsetWidth - timeScaleWidth;
-			var height = window.tvWidget.activeChart().getPanes()[0].getHeight();
-			var price = window.tvWidget.activeChart().getPanes()[0].getMainSourcePriceScale().coordinateToPrice(y);
-			var time = window.tvWidget.activeChart().getTimeScale().coordinateToTime(x - priceScaleWidth);
-
-			var xAxisLabel = document.getElementById('x-axis-label');
-			var yAxisLabel = document.getElementById('y-axis-label');
-
-			if (price !== null && time !== null) {
-				xAxisLabel.innerHTML = formatTimestamp(time);
-				yAxisLabel.innerHTML = price.toFixed(2);
-
-				xAxisLabel.style.left = (x - xAxisLabel.offsetWidth / 2) + 'px';
-				xAxisLabel.style.top = height + 'px';
-				xAxisLabel.style.display = 'block';
-
-				yAxisLabel.style.left = 0 + 'px';
-				yAxisLabel.style.top = (y - yAxisLabel.offsetHeight / 2) + 'px';
-				yAxisLabel.style.display = 'block';
-
-			} else {
-				document.getElementById('x-axis-label').style.display = 'none';
-				document.getElementById('y-axis-label').style.display = 'none';
-			}
-
-		}
-
-		function removeCrosshair() {
-			document.getElementById('vertical-line').style.display = 'none';
-			document.getElementById('horizontal-line').style.display = 'none';
-			document.getElementById('x-axis-label').style.display = 'none';
-			document.getElementById('y-axis-label').style.display = 'none';
-		}
-
-		// 时间格式化
-		function formatTimestamp(timestamp) {
-			var date = new Date(timestamp * 1000);
-			var year = date.getFullYear();
-			var month = ('0' + (date.getMonth() + 1)).slice(-2);
-			var day = ('0' + date.getDate()).slice(-2);
-			var hours = ('0' + date.getHours()).slice(-2);
-			var minutes = ('0' + date.getMinutes()).slice(-2);
-			var seconds = ('0' + date.getSeconds()).slice(-2);
-
-			var formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-			return formattedDate;
-		}
-
-
 		window.addEventListener('DOMContentLoaded', initOnReady, false);
 	</script>
 
@@ -611,7 +341,7 @@
 
 <body style="margin:0px;">
 	<div id="tv_chart_container"></div>
-	<div class="customerDiv" style="height: 14px; background-color: blue;"></div>
+	<div id="customerDiv" class="customerDiv" style="height: 14px; background-color: blue;"></div>
 	<div id="tv_chart_container2"></div>
 	<div id="vertical-line" class="vertical-line" style="display: none;"></div>
 	<div id="horizontal-line" class="horizontal-line" style="display: none;"></div>
