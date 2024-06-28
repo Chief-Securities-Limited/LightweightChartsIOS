@@ -271,6 +271,18 @@
 			return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 		}
 
+
+		window.onload = function () {
+			var tradingDocumentElement = document.getElementById('tv_chart_container').querySelector('iframe').contentDocument.documentElement
+			tradingDocumentElement.addEventListener('touchmove', function (event) {
+				const touch = event.touches[0];
+				var x = touch.clientX;
+				var y = touch.clientY;
+				moveCrosshair(x, y);
+				console.log('Touch move event:===== ', x, y);
+			});
+		};
+
 		function initOnReady() {
 			console.log("initOnReady========");
 			var datafeedUrl = "https://demo-feed-data.tradingview.com";
