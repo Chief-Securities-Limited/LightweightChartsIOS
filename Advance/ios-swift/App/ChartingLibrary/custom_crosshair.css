@@ -1,6 +1,8 @@
 .customerDiv {
-    z-index: 99;
+    z-index: 9;
     position: relative;
+    background-color: blue;
+    height: 14px;
 }
 
 .vertical-line {

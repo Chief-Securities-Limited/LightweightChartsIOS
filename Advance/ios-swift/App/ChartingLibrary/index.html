@@ -15,7 +15,6 @@
 	<link rel="stylesheet" href="custom_crosshair.css">
 
 	<script type="text/javascript">
-	
 		function getParameterByName(name) {
 			name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
 			var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
@@ -24,210 +23,29 @@
 		}
 
 		window.onload = function () {
-			let longPressTimer;
-			var startTrackingMode = false;
-
-			var tradingDocumentElement = document.getElementById('tv_chart_container').querySelector('iframe').contentDocument.documentElement
-			
-			tradingDocumentElement.addEventListener('touchmove', function (event) {
-				const touch = event.touches[0];
-				var x = touch.clientX;
-				var y = touch.clientY;
-
-				console.log('Touch==== visible:===== start ');
-				var visible = window.tvWidget.activeChart().chartModel().crossHairSource().visible;
-				console.log('Touch==== visible:===== value ', visible);
-				if (startTrackingMode) {
-					crossHairMoved(x, y);
-				} else {
-					cancelLongPressTimer();
-					startTrackingMode = false;
-					removeCrosshair(); 
-				}
-
-				console.log('Touch==== move event:===== ', x, y);
-			});
-
-			tradingDocumentElement.addEventListener('touchstart', function (event) {
-				console.log('Touch==== start event:===== ');
-				if (startTrackingMode) {
-					startTrackingMode = false;
-					removeCrosshair();
-				}
-				startLongPressTimer(event);
-			}, { passive: true });
-			
-			tradingDocumentElement.addEventListener('touchend', function (event) {
-				console.log('Touch==== end event:===== ');
-				cancelLongPressTimer();
-				if (startTrackingMode) {
-					removeCrosshair();
-				}
-				window.tvWidget.activeChart()._chartWidget.exitTrackingMode();
-			});
-
-			function startLongPressTimer(e) {
-				cancelLongPressTimer();
-				// e.preventDefault(); // Prevent default touch actions
-				longPressTimer = setTimeout(() => handleLongPress(e), 100); // 240ms for long press detection
-			}
-			
-			function cancelLongPressTimer() {
-				clearTimeout(longPressTimer);
-			}
-
-			function handleLongPress(e) {
-				startTrackingMode = true;
-				console.log('Touch==== Long press event:=====');
-				// start tracking
-				window.tvWidget.activeChart()._chartWidget.startTrackingMode();
-				// e.preventDefault(); // Prevent default touch actions
-				cancelLongPressTimer(longPressTimer);
-				var x, y;
-				if (e.type === 'touchstart' || e.type === 'touchmove') {
-					const touch = e.touches[0];
-					x = touch.clientX;
-					y = touch.clientY;
-					console.log(`Touch coordinates: (${touch.clientX}, ${touch.clientY})`);
-				} else {
-					x = e.clientX;
-					y = e.clientY;
-					console.log(`Mouse coordinates: (${e.clientX}, ${e.clientY})`);
-				}
-				crossHairMoved(x, y);
-			}
+			const seriesDocument = document.getElementById('tv_chart_container').querySelector('iframe').contentDocument.documentElement
+			const studiesDocument = document.getElementById('studies_chart_container').querySelector('iframe').contentDocument.documentElement
+			observeCrosshairMove(seriesDocument, true);
+			observeCrosshairMove(studiesDocument, false);
 		};
 
-
 		function initOnReady() {
-			console.log("initOnReady========");
 			var datafeedUrl = "https://demo-feed-data.tradingview.com";
 			var customDataUrl = getParameterByName('dataUrl');
 			if (customDataUrl !== "") {
 				datafeedUrl = customDataUrl.startsWith('https://') ? customDataUrl : `https://${customDataUrl}`;
 			}
 
-			var seriesWidget = window.tvWidget = new TradingView.widget({
-				debug: true, // uncomment this line to see Library errors and warnings in the console
-				// fullscreen: true,
-				// autosize: true,
-				width: 430,
-				height: 260,
-				symbol: 'AAPL',
-				interval: 'D',
-				container: "tv_chart_container",
+			var datasource = new Datafeeds.UDFCompatibleDatafeed(datafeedUrl, undefined, {
+				maxResponseLength: 1000,
+				expectedOrder: 'latestFirst',
+			})
 
-				// BEWARE: no trailing slash is expected in feed URL
-				datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl, undefined, {
-					maxResponseLength: 1000,
-					expectedOrder: 'latestFirst',
-				}),
-				// datafeed: chartDataFetcher,
-				library_path: "charting_library/",
-				locale: getParameterByName('lang') || "en",
-
-				// disabled_features: ["use_localstorage_for_settings"],
-				enabled_features: ["study_templates"],
-				charts_storage_url: 'https://saveload.tradingview.com',
-				charts_storage_api_version: "1.1",
-				client_id: 'tradingview.com',
-				user_id: 'public_user_id',
-				theme: getParameterByName('theme'),
-				timezone: 'Asia/Hong_Kong',
-
-				disabled_features: [
-					"header_widget", 	// 隐藏顶部的视图
-					"left_toolbar", 	// 隐藏左侧的工具栏
-					"legend_widget", 	// 隐藏顶部的symbol视图
-					"timeframes_toolbar",	// 隐藏底部的时间刻度
-					"main_series_scale_menu", // 隐藏底部的设置按钮
-					"create_volume_indicator_by_default" // 不显示成交量图表
-				],
-
-				enabled_features: [
-				],
-
-				overrides: {
-					"highLowAvgPrice.highLowPriceLinesVisible": false,	// 隐藏最高最低水平線
-					"mainSeriesProperties.showPrevClosePriceLine": false, // 隐藏昨收价水平線
-					"ChartPriceScaleLabelsToggleSymbolNameLabelsVisibility": false,	 // 隐藏symbol名称
-					"ChartPriceScaleLabelsToggleHighLowPriceLabelsVisibility": false, // 隐藏最高最低值
-					"ChartPriceScaleLabelsToggleSymbolPrevCloseValueVisibility": false, // 隱藏昨收价
-					"ChartPriceScaleLabelsToggleAveragePriceLabelVisibility": false, // 隱藏最新值
-					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏主图的十字线
-					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
-					"scalesProperties.showPriceScaleCrosshairLabel": false,	// 隐藏Y轴十字线对应的label
-				}
-			});
-
-			var studiesWidget = window.tvWidget2 = new TradingView.widget({
-				debug: true, // uncomment this line to see Library errors and warnings in the console
-				// fullscreen: true,
-				// autosize: true,
-				width: 430,
-				height: 400,
-				symbol: 'AAPL',
-				interval: 'D',
-				container: "tv_chart_container2",
-
-				// BEWARE: no trailing slash is expected in feed URL
-				datafeed: new Datafeeds.UDFCompatibleDatafeed(datafeedUrl, undefined, {
-					maxResponseLength: 1000,
-					expectedOrder: 'latestFirst',
-				}),
-				// datafeed: chartDataFetcher,
-				library_path: "charting_library/",
-				locale: getParameterByName('lang') || "en",
-
-				// disabled_features: ["use_localstorage_for_settings"],
-				enabled_features: ["study_templates"],
-				charts_storage_url: 'https://saveload.tradingview.com',
-				charts_storage_api_version: "1.1",
-				client_id: 'tradingview.com',
-				user_id: 'public_user_id',
-				theme: getParameterByName('theme'),
-				timezone: 'Asia/Hong_Kong',
-				supports_marks: false,  // 禁用标记显示
-
-				disabled_features: [
-					"header_widget", 	// 隐藏顶部的视图
-					"left_toolbar", 	// 隐藏左侧的工具栏
-					"legend_widget", 	// 隐藏顶部的symbol视图
-					"timeframes_toolbar",	// 隐藏底部的时间刻度
-					"main_series_scale_menu", // 隐藏底部的设置按钮
-					"create_volume_indicator_by_default" // 不显示成交量图表
-				],
-
-				enabled_features: [
-				],
-
-				overrides: {
-					// 图表属性：https://www.tradingview.com/charting-library-docs/latest/api/interfaces/Charting_Library.ChartPropertiesOverrides#mainseriespropertiesbaselinestylebottomlinewidth
-					// 刻度样式设置
-					"mainSeriesProperties.style": 0,  // 设置主系列样式为 0（无显示）
-					"mainSeriesProperties.visible": false, // 隐藏主系列
-					"paneProperties.legendProperties.showStudyTitles": true,
-					"paneProperties.legendProperties.showStudyValues": true,
-					"mainSeriesProperties.showPriceLine": false,  // 隐藏价格线
-					"symbolWatermarkProperties.color": "rgba(0, 0, 0, 0)",  // 隐藏水印
-					"scalesProperties.showSeriesLastValue": false,  // 隐藏最新值标记
-					"scalesProperties.showRightScale": false, // 隐藏右侧刻度
-					"scalesProperties.showHighAndLow": false, // 隐藏最高最低值
-					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏studies图表的十字线
-					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
-					"scalesProperties.showPriceScaleCrosshairLabel": false	// 隐藏Y轴十字线对应的label
-				}
-			});
+			var seriesWidget = window.tvWidget = buildWidget(430, 260, "tv_chart_container", datasource);
+			var studiesWidget = window.tvWidget2 = buildWidget(430, 300, "studies_chart_container", datasource);
 
 			// 主图
 			seriesWidget.onChartReady(() => {
-				// 监听十字线
-				seriesWidget.activeChart().crossHairMoved().subscribe(null, function ({ offsetX, offsetY, time, price }) {
-					// console.log("cross hair moved: ", time, price + "==== x: " + offsetX + " y: " + offsetY);
-					// var priceRange = seriesWidget.activeChart().getVisiblePriceRange();
-					// console.log("price-range: ======== )", priceRange);
-				});
-				
 				seriesWidget.activeChart().onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
 					console.log("visible range changed: ", from, to)
 					// 时间轴监听(实现不同widget的时间轴同步)
@@ -237,31 +55,17 @@
 					}
 					studiesWidget.activeChart().setVisibleRange({ from: from, to: to });
 				});
-
-				seriesWidget.activeChart().onHoveredSourceChanged().subscribe(null, function ({ arguments }) {
-					console.log("onHoveredSourceChanged: ========  ", onHoveredSourceChanged);
-				});
-
-				// 重写图表属性
-				seriesWidget.applyOverrides({ 
-					"priceScaleSelectionStrategyName": "left"		// 设置y轴，左边放置
-				});
-				
 				refreshAllPanesCustomYAxis(seriesWidget);
 			});
 
 			// 指标线图
 			studiesWidget.onChartReady(() => {
-				// 隐藏Series图
-				// var seriesEntityId = studiesWidget.activeChart().getSeries().entityId();
-				// studiesWidget.activeChart().removeEntity(seriesEntityId);
-				studiesWidget.activeChart().getSeries().setVisible(false);
-				// studiesWidget.activeChart().getSeries().sendToBack();
-				// studiesWidget.activeChart().getPanes()[0].collapse();
+				// hidden series chart
+				const chart = studiesWidget.activeChart();
+				chart.getSeries().setVisible(false);
 
-				// 创建指标图
-				studiesWidget.activeChart().createStudy('Volume', false, false).then(entityId => {
-					console.log("Volume: ======== )", entityId);
+				// create studies
+				chart.createStudy('Volume', true, false).then(entityId => {
 					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
 					indicator.startFullscreen();
@@ -269,16 +73,14 @@
 						'showLabelsOnPriceScale': false,
 					});
 				});
-				studiesWidget.activeChart().createStudy('MACD', false, false).then(entityId => {
-					console.log("MACD: ======== )", entityId);
+				chart.createStudy('MACD', false, false).then(entityId => {
 					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
 					indicator.applyOverrides({
 						'showLabelsOnPriceScale': false,
 					});
 				});
-				studiesWidget.activeChart().createStudy('Relative Strength Index', false, false).then(entityId => {
-					console.log("RSI: ======== )", entityId);
+				chart.createStudy('Relative Strength Index', false, false).then(entityId => {
 					refreshAllPanesCustomYAxis(studiesWidget);
 					var indicator = studiesWidget.activeChart().getStudyById(entityId);
 					indicator.applyOverrides({
@@ -286,15 +88,9 @@
 					});
 				});
 
-				// 监听十字线
-				studiesWidget.activeChart().crossHairMoved().subscribe(null, function ({ time, price }) {
-					// console.log("widget 1 cross hair moved: ", time, price);
-				});
-
-				// 时间轴监听(实现不同widget的时间轴同步)
-				studiesWidget.activeChart().onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
-					console.log("visible range changed: ", from, to)
-					
+				// sync time range between two widgets
+				chart.onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
+					console.log("visible range changed: ", from, to);
 					var visibleRange = seriesWidget.activeChart().getVisibleRange();
 					if (visibleRange.from === from && visibleRange.to === to) {
 						return;
@@ -302,9 +98,10 @@
 					seriesWidget.activeChart().setVisibleRange({ from: from, to: to });
 				});
 
-				// 重写图表属性
-				studiesWidget.applyOverrides({
-					"priceScaleSelectionStrategyName": "left"		// 设置y轴，左边放置
+				// https://www.tradingview.com/charting-library-docs/latest/api/interfaces/Charting_Library.SubscribeEventsMap/#panes_height_changed
+				studiesWidget.subscribe('panes_height_changed', function () {
+					var panes = studiesWidget.activeChart().getPanes().length;
+					studiesWidget.activeChart().setAllPanesHeight([100, 100, 100]);
 				});
 
 				refreshAllPanesCustomYAxis(studiesWidget);
@@ -334,6 +131,68 @@
 			window.tvWidget.activeChart().setSymbol('IBM');
 		}
 
+		function buildWidget(width, height, containerId, datasource) {
+			var datafeedUrl = "https://demo-feed-data.tradingview.com";
+			var customDataUrl = getParameterByName('dataUrl');
+			if (customDataUrl !== "") {
+				datafeedUrl = customDataUrl.startsWith('https://') ? customDataUrl : `https://${customDataUrl}`;
+			}
+			return new TradingView.widget({
+				debug: true, // uncomment this line to see Library errors and warnings in the console
+				// fullscreen: true,
+				// autosize: true,
+				width: width,
+				height: height,
+				symbol: 'AAPL',
+				interval: 'D',
+				container: containerId,
+
+				// BEWARE: no trailing slash is expected in feed URL
+				datafeed: datasource,
+				// datafeed: chartDataFetcher,
+				library_path: "charting_library/",
+				locale: getParameterByName('lang') || "en",
+
+				// disabled_features: ["use_localstorage_for_settings"],
+				enabled_features: ["study_templates"],
+				charts_storage_url: 'https://saveload.tradingview.com',
+				charts_storage_api_version: "1.1",
+				client_id: 'tradingview.com',
+				user_id: 'public_user_id',
+				theme: getParameterByName('theme'),
+				timezone: 'Asia/Hong_Kong',
+				supports_marks: false,  // 禁用标记显示
+
+				disabled_features: [
+					"header_widget", 	// 隐藏顶部的视图
+					"left_toolbar", 	// 隐藏左侧的工具栏
+					"legend_widget", 	// 隐藏顶部的symbol视图
+					"timeframes_toolbar",	// 隐藏底部的时间刻度
+					"main_series_scale_menu", // 隐藏底部的设置按钮
+					"create_volume_indicator_by_default" // 不显示成交量图表
+				],
+
+				enabled_features: [
+				],
+
+				overrides: {
+					// https://www.tradingview.com/charting-library-docs/latest/api/interfaces/Charting_Library.ChartPropertiesOverrides#mainseriespropertiesbaselinestylebottomlinewidth
+					"mainSeriesProperties.style": 0,  // 设置主系列样式为 0（无显示）
+					"mainSeriesProperties.visible": false, // 隐藏主系列
+					"paneProperties.legendProperties.showStudyTitles": true,
+					"paneProperties.legendProperties.showStudyValues": true,
+					"mainSeriesProperties.showPriceLine": false,  // 隐藏价格线
+					"symbolWatermarkProperties.color": "rgba(0, 0, 0, 0)", 
+					"scalesProperties.showSeriesLastValue": false,  // 隐藏最新值标记
+					"scalesProperties.showRightScale": false, // 隐藏右侧刻度
+					"scalesProperties.showHighAndLow": false, // 隐藏最高最低值
+					"paneProperties.crossHairProperties.color": "rgba(0, 0, 0, 0)", // 隐藏studies图表的十字线
+					"scalesProperties.showTimeScaleCrosshairLabel": false, // 隐藏时间轴十字线对应的label
+					"scalesProperties.showPriceScaleCrosshairLabel": false	// 隐藏Y轴十字线对应的label
+				}
+			});
+		}
+
 		window.addEventListener('DOMContentLoaded', initOnReady, false);
 	</script>
 
@@ -341,8 +200,9 @@
 
 <body style="margin:0px;">
 	<div id="tv_chart_container"></div>
-	<div id="customerDiv" class="customerDiv" style="height: 14px; background-color: blue;"></div>
-	<div id="tv_chart_container2"></div>
+	<div id="customerDiv" class="customerDiv"></div>
+	<div id="studies_chart_container"></div>
+
 	<div id="vertical-line" class="vertical-line" style="display: none;"></div>
 	<div id="horizontal-line" class="horizontal-line" style="display: none;"></div>
 	<div id="x-axis-label" class="x-axis-label" style="display: none;"></div>

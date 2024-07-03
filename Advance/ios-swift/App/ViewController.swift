@@ -19,6 +19,13 @@ struct BarItem: Codable {
     var volume: Int64
 }
 
+enum ButtonType: Int, CaseIterable {
+    case draw = 10
+    case vol
+    case macd
+    case rsi
+}
+
 class ViewController: UIViewController, WKScriptMessageHandler {
     
     private var drawCrosshair = false
@@ -56,32 +63,31 @@ class ViewController: UIViewController, WKScriptMessageHandler {
         return webView
     }()
     
-    private lazy var drawButton: UIButton = {
-        let btn = UIButton(type: .custom)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.setTitle("Draw", for: .normal)
-        btn.setTitleColor(.blue, for: .normal)
-        btn.addTarget(self, action: #selector(startDrawing), for: .touchUpInside)
-        btn.layer.borderColor = UIColor.blue.cgColor
-        btn.layer.borderWidth = 0.5
-        return btn
+    private lazy var stackView: UIStackView = {
+        let view = UIStackView()
+        view.axis = .horizontal
+        view.distribution = .fillEqually
+        view.spacing = 8
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
     }()
    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(mainWebView)
-        view.addSubview(drawButton)
+        view.addSubview(stackView)
+        setupButtons()
         
         NSLayoutConstraint.activate([
             mainWebView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
             mainWebView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
-            mainWebView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
+            mainWebView.bottomAnchor.constraint(equalTo: stackView.topAnchor, constant: -20),
             mainWebView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
 
-            drawButton.leadingAnchor.constraint(equalTo: mainWebView.leadingAnchor),
-            drawButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.25),
-            drawButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: 20),
-            drawButton.heightAnchor.constraint(equalToConstant: 44)
+            stackView.leadingAnchor.constraint(equalTo: mainWebView.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            stackView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            stackView.heightAnchor.constraint(equalToConstant: 44)
         ])
         
         guard let url = Bundle.main.url(forResource: "index", withExtension: "html") else {
@@ -93,6 +99,25 @@ class ViewController: UIViewController, WKScriptMessageHandler {
    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+    }
+    
+    func setupButtons() {
+        stackView.addArrangedSubview(buildButton(title: "Draw", type: .draw))
+        stackView.addArrangedSubview(buildButton(title: "VOL", type: .vol))
+        stackView.addArrangedSubview(buildButton(title: "MACD", type: .macd))
+        stackView.addArrangedSubview(buildButton(title: "RSI", type: .rsi))
+    }
+    
+    func buildButton(title: String, type: ButtonType) -> UIButton {
+        let btn = UIButton(type: .custom)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.setTitle(title, for: .normal)
+        btn.setTitleColor(.blue, for: .normal)
+        btn.addTarget(self, action: #selector(buttonClickAction(sender:)), for: .touchUpInside)
+        btn.layer.borderColor = UIColor.blue.cgColor
+        btn.layer.borderWidth = 0.5
+        btn.tag = type.rawValue
+        return btn
     }
 
 }
@@ -204,13 +229,27 @@ extension ViewController {
 
 // MARK: - Draw Tool
 extension ViewController {
-    @objc func startDrawing() {
-        let vc = DrawToolBottomSheetViewController()
-        vc.didSelectedDrawToolCallBack = { type in
-            self.mainWebView.evaluateJavaScript("drawTool('\(type)')", completionHandler: { _, _ in
-            })
+    @objc func buttonClickAction(sender: UIButton) {
+        guard let type = ButtonType(rawValue: sender.tag) else {
+            return
         }
-        presentPanModal(vc)
+        
+        switch type {
+        case .draw:
+            let vc = DrawToolBottomSheetViewController()
+            vc.didSelectedDrawToolCallBack = { type in
+                self.mainWebView.evaluateJavaScript("drawTool('\(type)')", completionHandler: { _, _ in
+                })
+            }
+            presentPanModal(vc)
+            
+        case .vol:
+            break
+        case .macd:
+            break
+        case .rsi:
+            break
+        }
     }
 }
 
