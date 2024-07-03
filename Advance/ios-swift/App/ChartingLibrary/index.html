@@ -47,8 +47,7 @@
 			// 主图
 			seriesWidget.onChartReady(() => {
 				seriesWidget.activeChart().onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
-					console.log("visible range changed: ", from, to)
-					// 时间轴监听(实现不同widget的时间轴同步)
+					// sync time range between two widgets
 					var visibleRange = studiesWidget.activeChart().getVisibleRange();
 					if (visibleRange.from === from && visibleRange.to === to) {
 						return;
@@ -90,7 +89,6 @@
 
 				// sync time range between two widgets
 				chart.onVisibleRangeChanged().subscribe(null, function ({ from, to }) {
-					console.log("visible range changed: ", from, to);
 					var visibleRange = seriesWidget.activeChart().getVisibleRange();
 					if (visibleRange.from === from && visibleRange.to === to) {
 						return;
